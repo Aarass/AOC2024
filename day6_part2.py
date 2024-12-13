@@ -1,14 +1,16 @@
 import time
 start_time = time.time()
 
-def is_not_outside(i, j):
+def is_not_outside(pos):
+  i = pos[0]
+  j = pos[1]
   return i >= 0 and i < h and j >= 0 and j < w
 
-def get_key(i, j):
-  return f"{i}_{j}"
+def get_pos_key(pos):
+  return f"{pos[0]}_{pos[1]}"
 
-def visit(pos, direction):
-  return (get_key(pos[0], pos[1]), direction)
+def get_key(pos, dir):
+  return f"{pos[0]}_{pos[1]}_{dir}"
 
 def get_new_position(pos, direction):
   match direction:
@@ -24,7 +26,7 @@ def get_new_position(pos, direction):
 def change_direction(direction):
   return (direction + 1) % 4
 
-with open("day6_testinput.txt", "r") as file:
+with open("day6_input.txt", "r") as file:
   text = file.read().split()
 
   w = len(text[0])
@@ -36,25 +38,21 @@ with open("day6_testinput.txt", "r") as file:
   for i, line in enumerate(text):
     for j, char in enumerate(line):
       if char == '#':
-        obstacles.add(get_key(i, j))
+        obstacles.add(get_pos_key([i, j]))
       elif char == '^':
         guard = [i, j]
 
   guard_start = guard.copy()
+  guard_start_key = get_pos_key(guard_start)
 
-  visited = dict()
+  visited = set()
   direction = 0
 
-  while is_not_outside(guard[0], guard[1]):
-    key = get_key(guard[0], guard[1])
-    if key not in visited:
-      visited[key] = [(guard, direction)]
-    else:
-      visited[key].append((guard, direction))
+  while is_not_outside(guard):
+    visited.add(get_pos_key(guard))
 
     new_pos = get_new_position(guard, direction)
-    while get_key(new_pos[0], new_pos[1]) in obstacles:
-      # print("")
+    while get_pos_key(new_pos) in obstacles:
       direction = change_direction(direction)
       new_pos = get_new_position(guard, direction)
 
@@ -63,38 +61,32 @@ with open("day6_testinput.txt", "r") as file:
   # print(len(visited))
 
   potential_new_obstacles = set()
-  for key, visits in visited.items():
-    for pos, dir in visits:
-      if pos[0] == guard_start[0] and pos[1] == guard_start[1]:
-        continue
-      potential_new_obstacles.add(key)
+  for key in visited:
+    if key == guard_start_key: continue
+    potential_new_obstacles.add(key)
+
+  # print(len(potential_new_obstacles))
 
   cycles = 0
   for obs in potential_new_obstacles:
-    # new_obstacles = set(obstacles)
-    # new_obstacles.add(obs)
+    visited = set()
     new_obstacles = obstacles.union([obs])
 
-    visited = dict()
-    direction = 0
     guard = guard_start.copy()
+    direction = 0
 
     found_cycle = False
+    while is_not_outside(guard):
+      key = get_key(guard, direction)
 
+      if key in visited:
+        found_cycle = True
+        break;
 
-    while is_not_outside(guard[0], guard[1]):
-      key = get_key(guard[0], guard[1])
-      if key not in visited:
-        visited[key] = [(guard, direction)]
-      else:
-        # print("Check:", direction, visited[key])
-        if direction in map(lambda x: x[1], visited[key]):
-          found_cycle = True
-          break;
-        visited[key].append((guard, direction))
+      visited.add(key)
 
       new_pos = get_new_position(guard, direction)
-      while get_key(new_pos[0], new_pos[1]) in new_obstacles:
+      while get_pos_key(new_pos) in new_obstacles:
         direction = change_direction(direction)
         new_pos = get_new_position(guard, direction)
 
@@ -102,9 +94,6 @@ with open("day6_testinput.txt", "r") as file:
 
     if found_cycle:
       cycles += 1
-      # print("Found cycle")
-      # print(new_obstacles.difference(obstacles))
-
     
   print("Count:", cycles)
 
