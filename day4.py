@@ -1,5 +1,4 @@
 import re
-import textwrap
 
 with open("day4_input.txt", "r") as file:
   first_line = next(file)
