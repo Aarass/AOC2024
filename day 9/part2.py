@@ -3,7 +3,7 @@ from collections import namedtuple
 
 Block = namedtuple("Block", ["type", "size", "id"])
 with open("input.txt", "r") as file:
-  text = file.read()
+  text = file.read().strip()
   # text = "2333133121414131402"
 
   # File(0, 1024, None)
