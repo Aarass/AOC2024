@@ -1,40 +1,46 @@
+from functools import cache
 import time
 start_time = time.time()
 
-memo = [dict()] * 25
 def stones_after_blinks(stones: list[int], blinks: int):
-  n = len(stones)
-  for q in range(0, blinks):
-    updated = list()
-    for i in range(n -1, -1, -1):
-      if stones[i] == 0:
-        updated.append(1)
-        # stones[i] = 1
-      else:
-        s = str(stones[i])
-        h, r = divmod(len(s), 2)
-        if r == 0:
-          left = int(s[0:h:])
-          right = int(s[h::])
-
-          updated.append(left)
-          updated.append(right)
-          # stones[i] = left
-          # stones.append(right)
-          n += 1
-        else:
-          updated.append(stones[i] * 2024)
-          # stones[i] *= 2024
-    stones = updated
+  count = 0
+  for stone in stones:
+    count += stone_after_blinks(stone, blinks)
   
-  return stones
+  return count
 
-with open("testinput.txt", "r") as file:
+def get_children(stone: int):
+  if stone == 0:
+    return [1]
+  else:
+    s = str(stone)
+    h, r = divmod(len(s), 2)
+    if r == 0:
+      left = int(s[0:h:])
+      right = int(s[h::])
+
+      return [left, right]
+    else:
+      return [stone * 2024]
+
+@cache
+def stone_after_blinks(stone: int, blinks: int):
+  if blinks == 0:
+    return 1
+
+  new_stones = get_children(stone)
+
+  count = 0
+  for new_stone in new_stones:
+    count += stone_after_blinks(new_stone, blinks - 1)
+  
+  return count
+
+with open("input.txt", "r") as file:
   numbers = list(map(int, file.read().split(" ")))
-  blinks = 25
+  blinks = 75
 
-  numbers = stones_after_blinks(numbers, blinks)
-  print(len(numbers))
+  print(stones_after_blinks(numbers, blinks))
 
 
 end_time = time.time()
